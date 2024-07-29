@@ -279,31 +279,32 @@ defmodule Styler.Style.ModuleDirectives do
   end
 
   defp lift_aliases(%{alias: aliases, require: requires, nondirectives: nondirectives} = acc) do
-    # we can't use the dealias map built into state as that's what things look like before sorting
-    # now that we've sorted, it could be different!
-    dealiases = AliasEnv.define(aliases)
-    excluded = dealiases |> Map.keys() |> Enum.into(Styler.Config.get(:lifting_excludes))
-    liftable = find_liftable_aliases(requires ++ nondirectives, excluded)
+    acc
+    # # we can't use the dealias map built into state as that's what things look like before sorting
+    # # now that we've sorted, it could be different!
+    # dealiases = AliasEnv.define(aliases)
+    # excluded = dealiases |> Map.keys() |> Enum.into(Styler.Config.get(:lifting_excludes))
+    # liftable = find_liftable_aliases(requires ++ nondirectives, excluded)
 
-    if Enum.any?(liftable) do
-      # This is a silly hack that helps comments stay put.
-      # The `cap_line` algo was designed to handle high-line stuff moving up into low line territory, so we set our
-      # new node to have an arbitrarily high line annnnd comments behave! i think.
-      m = [line: 999_999]
+    # if Enum.any?(liftable) do
+    #   # This is a silly hack that helps comments stay put.
+    #   # The `cap_line` algo was designed to handle high-line stuff moving up into low line territory, so we set our
+    #   # new node to have an arbitrarily high line annnnd comments behave! i think.
+    #   m = [line: 999_999]
 
-      aliases =
-        liftable
-        |> Enum.map(&AliasEnv.expand(dealiases, {:alias, m, [{:__aliases__, [{:last, m} | m], &1}]}))
-        |> Enum.concat(aliases)
-        |> sort()
+    #   aliases =
+    #     liftable
+    #     |> Enum.map(&AliasEnv.expand(dealiases, {:alias, m, [{:__aliases__, [{:last, m} | m], &1}]}))
+    #     |> Enum.concat(aliases)
+    #     |> sort()
 
-      # lifting could've given us a new order
-      requires = requires |> do_lift_aliases(liftable) |> sort()
-      nondirectives = do_lift_aliases(nondirectives, liftable)
-      %{acc | alias: aliases, require: requires, nondirectives: nondirectives}
-    else
-      acc
-    end
+    #   # lifting could've given us a new order
+    #   requires = requires |> do_lift_aliases(liftable) |> sort()
+    #   nondirectives = do_lift_aliases(nondirectives, liftable)
+    #   %{acc | alias: aliases, require: requires, nondirectives: nondirectives}
+    # else
+    #   acc
+    # end
   end
 
   defp find_liftable_aliases(ast, excluded) do
